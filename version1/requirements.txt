@@ -1,0 +1,9 @@
+# Core AI Framework
+ultralytics>=8.3.0
+
+# Computer Vision (Webcam & Image handling)
+opencv-python
+
+# Math & Data handling
+numpy
+pandas
