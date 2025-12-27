@@ -20,7 +20,7 @@ The current version represents an early **Minimum Viable Product (MVP)**. The mo
 
 - **RTPD_version1.pt**  
   Fine-tuned YOLOv12-Nano model weights trained on a custom dataset over 100 epochs.  
-  This file contains the parameters required by `run_stable.py` to initialize the model for real-time inference.
+  This file contains the parameters required by `run_1.py` to initialize the model for real-time inference.
 
 - **train_1.py**  
   Training script used to fine-tune the YOLOv12-Nano model on the custom dataset.
