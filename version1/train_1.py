@@ -3,12 +3,14 @@ from ultralytics import YOLO
 
 def main():
     """
-    Train a YOLOv12-Nano model on a custom dataset.
-
-    Note:
-    On Windows, the training logic must be placed inside a function
-    and protected by the '__main__' guard to avoid multiprocessing issues.
+   Note:
+    - This training script is intended to be run on a system with a CUDA-enabled GPU.
+      Running on CPU-only systems is not recommended due to significantly longer
+      training times.
+    - On Windows, the training logic must be placed inside a function and protected
+      by the '__main__' guard to avoid multiprocessing issues.
     """
+  
 
     # Load pretrained YOLOv12-Nano model
     model = YOLO("yolo12n.pt")
@@ -16,7 +18,7 @@ def main():
     print("Starting model training (100 epochs)...")
 
     results = model.train(
-        data="path/data.yaml",
+        data="path/data.yaml", # Path to dataset configuration file
         epochs=100,
         imgsz=640,
         batch=16,
