@@ -23,7 +23,7 @@ def main():
         imgsz=640,
         batch=16,
         device=0,
-        name="pepsi_overkill",
+        name="version1",
 
         # Windows-safe training settings
         workers=4,
