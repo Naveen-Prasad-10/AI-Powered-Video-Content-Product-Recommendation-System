@@ -1,40 +1,56 @@
-from ultralytics import YOLO
+"""
+YOLOv12-Nano Training Script
+----------------------------
+Standard training pipeline for the VidRecAI product detection model.
+This script is configured for CUDA-enabled GPUs and uses standard
+hyperparameters for balancing training speed and model convergence.
+"""
 
+from ultralytics import YOLO
 
 def main():
     """
-   Note:
-    - This training script is intended to be run on a system with a CUDA-enabled GPU.
-      Running on CPU-only systems is not recommended due to significantly longer
-      training times.
-    - On Windows, the training logic must be placed inside a function and protected
-      by the '__main__' guard to avoid multiprocessing issues.
+    Main training entry point.
+    Ensures safe multiprocessing on Windows via the __main__ guard.
     """
-  
-
-    # Load pretrained YOLOv12-Nano model
+    
+    # 1. Load Pretrained Model
+    # We use 'yolo12n.pt' (Nano) for real-time edge performance.
     model = YOLO("yolo12n.pt")
 
-    print("Starting model training (100 epochs)...")
+    print("🚀 Starting Model Training (100 Epochs)...")
 
+    # 2. Execute Training
     results = model.train(
-        data="path/data.yaml", # Path to dataset configuration file
+        # ---------------------------------------------------------
+        # ⚠️ CONFIGURATION NOTE:
+        # When pasting your Windows file path below, ensure you keep the 'r' prefix
+        # (e.g., data=r"C:\Path\To\data.yaml") to avoid unicode errors.
+        # ---------------------------------------------------------
+        data=r"path/to/your/data.yaml",
+        
+        # Training Duration
         epochs=100,
+        
+        # Image Settings
         imgsz=640,
-        batch=16,
-        device=0,
-        name="version1",
+        batch=16,       # Standard batch size for 6GB+ VRAM
+        device=0,       # Use primary GPU
+        
+        # Output Naming
+        name="vidrecai_standard_v1",
 
-        # Windows-safe training settings
-        workers=4,
-        patience=0,
-        close_mosaic=10,
-        lr0=0.01,
-        lrf=0.01,
-        augment=True,
+        # Hyperparameters & System Settings
+        workers=4,      # optimized for 4-core+ CPUs
+        patience=0,     # Disable early stopping
+        close_mosaic=10,# Disable mosaic augmentation for final epochs
+        lr0=0.01,       # Initial Learning Rate
+        lrf=0.01,       # Final Learning Rate (Cosine Decay)
+        augment=True,   # Default augmentation enabled
     )
 
-    print("Training completed successfully.")
+    print("✅ Training completed successfully.")
+    print("   Weights saved to: runs/detect/vidrecai_standard_v1")
 
 
 if __name__ == "__main__":
