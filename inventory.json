@@ -1,0 +1,22 @@
+{
+    "pepsi_Can": {
+        "name": "Pepsi Can (330ml)",
+        "price": "Rs.40",
+        "url": "https://www.bigbasket.com/pd/40327060/pepsi-soft-drink-330-ml"
+    },
+    "pepsi_Bottle": {
+        "name": "Pepsi Bottle (750ml)",
+        "price": "Rs.37",
+        "url": "https://www.bigbasket.com/pd/251047/pepsi-soft-drink-750-ml/"
+    },
+    "coca_cola_Can": {
+        "name": "Coke Can (300ml)",
+        "price": "Rs.34",
+        "url": "https://www.bigbasket.com/pd/100401160/coca-cola-soft-drink-original-taste-300-ml-can/"
+    },
+    "coca_cola_Bottle": {
+        "name": "Coke Bottle (750ml)",
+        "price": "Rs.31",
+        "url": "https://www.bigbasket.com/pd/251023/coca-cola-soft-drink-original-taste-750-ml-pet-bottle/"
+    }
+}
