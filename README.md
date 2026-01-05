@@ -1,59 +1,72 @@
-# AI-Powered Video Content Product Recommendation System
+# 🛍️ AI-Powered Video Content Product Recommendation System
 
-> **Status:** Functional MVP (v2)
-> **Target:** Real-time retail detection on consumer hardware
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red) ![YOLO](https://img.shields.io/badge/AI-YOLOv12--Nano-green) ![Status](https://img.shields.io/badge/Status-Prototype%20v3.0-orange)
 
-## Project Overview
-This project focuses on the development of an AI-powered system that analyzes video content in real time to identify consumer products and provide relevant product recommendations. By combining computer vision–based object detection with a backend recommendation pipeline, the system aims to bridge the gap between visual media and actionable product information.
+This project focuses on the development of an AI-powered system that analyzes video content in real-time to identify consumer products and provide relevant purchasing options.
 
-The core functionality involves detecting products appearing in video streams (such as advertisements, reviews, or user-generated content) using a deep learning–based object detection model. Once a product is identified, the system maps the detection to a structured product database and retrieves associated metadata, including product name, pricing details, and purchase links. These recommendations are then presented to the user in an intuitive and interactive manner.
+By combining computer vision–based object detection with a backend data handler, the system aims to bridge the gap between visual media and actionable product information. The current release (**v3**) introduces a web-based dashboard for video analysis.
 
-## Technical Implementation (MVP Scope)
-While the long-term vision encompasses broad product discovery, the current release focuses on a specialized implementation for **High-Speed Retail Detection**.
+> **🚀 Live Demo:** https://ai-powered-video-content-appuct-recommendation-system-bhwz7ikh.streamlit.app/
 
+---
 
+## 📸 Interface Preview
+<img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 214649.png" />
+<img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 215107.png" />
+## ✨ Key Features (v3.0)
 
-### Key Capabilities
-* **Real-Time Inference:** Utilizes a fine-tuned **YOLOv12-Nano** architecture to achieve **30+ FPS** on standard consumer GPUs (e.g., NVIDIA RTX series).
-* **Multi-Brand Logic:** Successfully distinguishes between **Pepsi** and **Coca-Cola** products.
-* **Geometric Sub-typing:** Differentiates between *Cans* and *Bottles* using a custom **Aspect Ratio Algorithm** (Ratio > 2.7 classified as Bottle) rather than computationally expensive segmentation masks.
-* **False Positive Rejection:** Implements a "Negative Sample" training strategy to explicitly ignore human faces and background clutter.
-* **Augmented Commerce:** Integrated `Spacebar` trigger that instantly opens the purchase URL for the detected product.
+### 1. 📹 Multi-Source Analysis
+* **Video Upload:** Drag-and-drop support for MP4, MOV, and AVI files.
+* **YouTube Integration:** Fetches and processes video directly from YouTube links (using `yt-dlp`).
 
-### System Pipeline
-The system operates on a hybrid **Detect → Analyze → Augment** architecture:
-1.  **Input:** Raw video feed (Webcam or Video File).
-2.  **Detection:** YOLOv12n identifies brand bounding boxes.
-3.  **Logic Layer:** A Python script filters low-confidence detections and calculates object geometry (Height/Width).
-4.  **Output:** OpenCV renders the "Smart Label" overlay and listens for user interaction.
+### 2. 🧠 Hybrid Detection Logic
+* **Brand Recognition:** Fine-tuned **YOLOv12-Nano** model detects broad brand classes (e.g., Pepsi, Coke).
+* **Geometric Sub-typing:** Custom **Aspect Ratio Algorithm** mathematically distinguishes between sub-variants without needing extra training classes:
+    * *Ratio > 2.7* ➔ Classified as **Bottle**.
+    * *Ratio < 2.7* ➔ Classified as **Can**.
 
-## Repository Structure
+### 3. 📝 Multi-Vendor Link Support (Prototype)
+* **Static Database:** Maps detected products to a local JSON registry (`inventory.json`).
+* **Vendor Selection:** Demonstrates the architecture for handling multiple sellers (e.g., BigBasket vs. Amazon).
+* *Note: Real-time competitive pricing via live APIs is planned for v4.*
 
-| File | Description |
-| :--- | :--- |
-| `yolov12n_multi_v2.pt` | The fine-tuned model weights (Pepsi vs. Coke). |
-| `detect.py` | Main inference script. Handles webcam streaming, geometric logic, and UI. |
-| `train.py` | Optimized training script with thermal safety limits (thread clamping). |
-| `requirements.txt` | Project dependencies (Ultralytics, OpenCV, Pandas, etc.). |
+### 4. 🛒 The "Shoppable Timeline"
+* **Session History:** Builds a persistent shopping list as the video plays.
+* **Interactive UI:** detected items appear in a clean data table with **direct "Purchase" buttons**.
 
-## 💻 Quick Start 
+---
 
-### 1. Install Dependencies
+## 🛠️ Technical Stack
+
+* **Frontend:** Streamlit (Python-based Web Framework)
+* **AI Engine:** Ultralytics YOLOv12-Nano (Custom Fine-Tune)
+* **Computer Vision:** OpenCV (Headless)
+* **Data Handling:** Pandas (DataFrames) & JSON
+* **Media Pipeline:** YT-DLP (Video Extraction)
+
+---
+
+## 💻 Quick Start (for local testing)
+### 1. Clone the Repository
+The repo contains the requirements,model weights as well as the necessary web framework to run the project locally, at lower latency.
+
+### 2. Install Dependencies
 Ensure you have Python installed, then run:
 
  `pip install -r requirements.txt` 
 
 ### 2. Download Model Weights
-Because the model weights are binary files, they are stored in the **Releases** section to keep the repository lightweight.
 
-1.  Navigate to the **[Releases](../../releases)** page of this repository.
-2.  Download the latest model file: **`yolov12n_multi_v2.pt`**.
-3.  Move the downloaded file into the **root directory** of this project (the same folder where `detect.py` is located).
+### 3. Run the Dashboard
+Launch the web server locally:
+`streamlit run app.py` or `python -m streamlit run app.py`
+### Future Roadmap
+Competitive Pricing Engine: Integrate live scraping APIs (e.g., RapidAPI) to compare prices in real-time.
 
-### 3. Run Inference
-Start the real-time detection on your primary webcam:
-python detect.py
-### 4. Controls
-Spacebar: Open the purchase link for the currently detected item in your default browser.
+User Accounts: Allow users to save their "Wishlist" across sessions.
 
-Q: Quit the application.
+Mobile App: Convert the Streamlit prototype into a native React Native application.
+
+> 📝 License: 
+This project is open-source and available under the MIT License.
+
