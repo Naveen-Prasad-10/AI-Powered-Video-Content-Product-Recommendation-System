@@ -8,7 +8,7 @@ import pandas as pd
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="AI-Powered Video Content Product Recommendation System (MVP)",
+    page_title="AI-Powered Video Content Product Recommendation System",
     layout="wide",
     page_icon="🛍️",
     initial_sidebar_state="expanded"
@@ -25,18 +25,25 @@ st.markdown("""
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.header("Real-Time Detection Engine")
+    st.caption("v1.0 - Minimum Viable Product (MVP)")
     st.divider()
     conf_threshold = st.slider("AI Sensitivity", 0.3, 1.0, 0.60, 0.05)
 
-# --- RESOURCE LOADING ---
+# --- RESOURCE LOADING (The "Universal" Logic) ---
 @st.cache_resource
 def load_resources():
-    local_path = r"path/to/your/RTPD_v2.pt"
+    # 1. PATH FOR YOUR LAPTOP (Windows)
+    # ⚠️ Make sure this path is exactly correct for your computer
+    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
     
-    if os.path.exists(local_path):
-        model_path = local_path
-    elif os.path.exists("RTPD_v2.pt"):
-        model_path = "RTPD_v2.pt"
+    # 2. PATH FOR GITHUB/CLOUD (Relative)
+    cloud_path = "RTPD_v2.pt"
+    
+    # 3. AUTO-SELECT LOGIC
+    if os.path.exists(local_windows_path):
+        model_path = local_windows_path
+    elif os.path.exists(cloud_path):
+        model_path = cloud_path
     else:
         return None, {}
 
@@ -56,7 +63,6 @@ if not model:
     st.stop()
 
 # --- MAIN DASHBOARD ---
-# UPDATED TITLE HERE
 st.title("Real-Time Product Detection & Recommendation")
 st.markdown("Upload a video stream to detect products and retrieve **real-time pricing**.")
 
