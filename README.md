@@ -13,7 +13,8 @@ By combining computer vision–based object detection with a backend data handle
 ## 📸 Interface Preview
 <img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 214649.png" />
 <img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 215107.png" />
-## ✨ Key Features (v3.0)
+
+### ✨ Key Features (v3.0)
 
 ### 1. 📹 Multi-Source Analysis
 * **Video Upload:** Drag-and-drop support for MP4, MOV, and AVI files.
@@ -28,7 +29,7 @@ By combining computer vision–based object detection with a backend data handle
 ### 3. 📝 Multi-Vendor Link Support (Prototype)
 * **Static Database:** Maps detected products to a local JSON registry (`inventory.json`).
 * **Vendor Selection:** Demonstrates the architecture for handling multiple sellers (e.g., BigBasket vs. Amazon).
-* *Note: Real-time competitive pricing via live APIs is planned for v4.*
+* *Note: Live price comparison across real-time vendor data is planned for v4.*
 
 ### 4. 🛒 The "Shoppable Timeline"
 * **Session History:** Builds a persistent shopping list as the video plays.
