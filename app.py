@@ -44,24 +44,48 @@ with st.sidebar:
 # --- RESOURCE LOADING ---
 @st.cache_resource
 def load_resources():
-    # 1. PATH FOR YOUR LAPTOP (Windows)
-    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
-    # 2. PATH FOR GITHUB/CLOUD (Relative)
-    cloud_path = "RTPD_v2.pt"
-    
-    if os.path.exists(local_windows_path):
-        model_path = local_windows_path
-    elif os.path.exists(cloud_path):
-        model_path = cloud_path
-    else:
-        return None, {}
+    # --- DEBUGGING: Print what the server sees ---
+    files = os.listdir(os.getcwd())
+    st.write(f"📂 Files detected on server: {files}")
+    # ---------------------------------------------
 
+    # 1. Define Standard Paths
+    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
+    cloud_filename = "RTPD_v2.pt"
+    
+    # 2. SMART SEARCH LOGIC
+    model_path = None
+    
+    # Check 1: Exact Match (Cloud)
+    if os.path.exists(cloud_filename):
+        model_path = cloud_filename
+    
+    # Check 2: Case Insensitive Search (Cloud Fallback)
+    elif any(f.lower() == cloud_filename.lower() for f in files):
+        # Find the actual name of the file on the server
+        actual_name = next(f for f in files if f.lower() == cloud_filename.lower())
+        model_path = actual_name
+        st.warning(f"⚠️ Found file, but case didn't match. Used: '{actual_name}'")
+        
+    # Check 3: Local Windows Path
+    elif os.path.exists(local_windows_path):
+        model_path = local_windows_path
+    
+    else:
+        st.error(f"❌ Critical Error: Could not find '{cloud_filename}' in {os.getcwd()}")
+        st.stop()
+
+    # Load Model
     model = YOLO(model_path)
     
+    # Load Database
     db = {}
-    if os.path.exists("inventory.json"):
-        with open("inventory.json", 'r') as f:
+    db_file = "inventory.json"
+    if os.path.exists(db_file):
+        with open(db_file, 'r') as f:
             db = json.load(f)
+    else:
+        st.warning("⚠️ Inventory.json not found. Using empty database.")
             
     return model, db
 
