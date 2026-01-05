@@ -1,6 +1,6 @@
 # 🛍️ AI-Powered Video Content Product Recommendation System
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red) ![YOLO](https://img.shields.io/badge/AI-YOLOv12--Nano-green) ![Status](https://img.shields.io/badge/Status-Prototype%20v3.0-orange)
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red) ![YOLO](https://img.shields.io/badge/AI-YOLOv12--Nano-green) ![Status](https://img.shields.io/badge/Status-Proatotype%20v3.0-orange)
 
 This project focuses on the development of an AI-powered system that analyzes video content in real-time to identify consumer products and provide relevant purchasing options.
 
