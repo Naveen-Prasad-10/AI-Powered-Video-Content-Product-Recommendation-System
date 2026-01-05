@@ -5,6 +5,7 @@ import tempfile
 import os
 import json
 import pandas as pd
+import time
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -14,32 +15,40 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- CSS FOR PERFORMANCE ---
 st.markdown("""
 <style>
     header {visibility: hidden;}
     .block-container {padding-top: 2rem;}
     [data-testid="stMetricValue"] { color: #00FF7F !important; }
+    /* Force images to load faster */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.header("Real-Time Detection Engine")
-    st.caption("v1.0 - Minimum Viable Product (MVP)")
+    st.caption("v1.0 - MVP (Cloud Optimized)")
     st.divider()
-    conf_threshold = st.slider("AI Sensitivity", 0.3, 1.0, 0.60, 0.05)
+    conf_threshold = st.slider("AI Sensitivity", 0.3, 1.0, 0.50, 0.05)
+    
+    # NEW: Performance Control
+    st.divider()
+    st.subheader("🚀 Performance Mode")
+    frame_skip = st.slider("Frame Skip (Higher = Smoother)", 2, 10, 3)
+    st.info(f"Skipping {frame_skip-1} frames. Displaying ~{30//frame_skip} FPS.")
 
-# --- RESOURCE LOADING (The "Universal" Logic) ---
+# --- RESOURCE LOADING ---
 @st.cache_resource
 def load_resources():
     # 1. PATH FOR YOUR LAPTOP (Windows)
-    # ⚠️ Make sure this path is exactly correct for your computer
     local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
-    
     # 2. PATH FOR GITHUB/CLOUD (Relative)
     cloud_path = "RTPD_v2.pt"
     
-    # 3. AUTO-SELECT LOGIC
     if os.path.exists(local_windows_path):
         model_path = local_windows_path
     elif os.path.exists(cloud_path):
@@ -80,6 +89,7 @@ if uploaded_file:
 
     with col_video:
         st.subheader("Input Stream")
+        # Use a placeholder for the video to prevent "stuttering" stack up
         video_window = st.empty()
     
     with col_live:
@@ -90,8 +100,6 @@ if uploaded_file:
     
     if start_btn:
         cap = cv2.VideoCapture(video_path)
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
-        if fps == 0: fps = 30
         
         frame_count = 0
         
@@ -100,8 +108,15 @@ if uploaded_file:
             if not ret: break
             
             frame_count += 1
-            if frame_count % (fps // 2) != 0: 
+            
+            # OPTIMIZATION 1: SKIP FRAMES
+            # If slider is 3, we process frame 3, 6, 9...
+            if frame_count % frame_skip != 0: 
                 continue 
+
+            # OPTIMIZATION 2: RESIZE
+            # Resize 4K/1080p videos to 640p for fast web rendering
+            frame = cv2.resize(frame, (640, 480))
 
             results = model.predict(frame, conf=conf_threshold, verbose=False)
             annotated_frame = frame.copy()
@@ -142,7 +157,8 @@ if uploaded_file:
                             st.success(f"**Recommended:** {product_name}")
                             st.metric("Best Price", price, f"Variant: {subtype}")
                         
-                        timestamp = frame_count // fps
+                        # Use time.time() for unique ID instead of frame math
+                        timestamp = frame_count
                         entry_id = f"{timestamp}_{product_name}"
                         
                         already_logged = any(x['id'] == entry_id for x in st.session_state.history)
@@ -150,7 +166,7 @@ if uploaded_file:
                         if not already_logged:
                             st.session_state.history.append({
                                 "id": entry_id,
-                                "Time (s)": timestamp,
+                                "Time (Frame)": timestamp,
                                 "Product": product_name,
                                 "Price": price,
                                 "Vendor": "Partner Store", 
@@ -158,6 +174,9 @@ if uploaded_file:
                             })
 
             frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+            
+            # OPTIMIZATION 3: DISPLAY
+            # .image() sends data to browser. Smaller image = faster.
             video_window.image(frame_rgb, use_container_width=True)
 
         cap.release()
@@ -168,16 +187,17 @@ if uploaded_file:
         
         df = pd.DataFrame(st.session_state.history)
         
-        st.dataframe(
-            df[["Time (s)", "Product", "Price", "Vendor", "Link"]],
-            column_config={
-                "Link": st.column_config.LinkColumn(
-                    "Action",
-                    display_text="Buy Now 🔗", 
-                    validate="^https://.*"
-                ),
-                "Time (s)": st.column_config.NumberColumn(format="%ds")
-            },
-            hide_index=True,
-            use_container_width=True
-        )
+        # Check if df is empty before rendering
+        if not df.empty:
+            st.dataframe(
+                df[["Time (Frame)", "Product", "Price", "Vendor", "Link"]],
+                column_config={
+                    "Link": st.column_config.LinkColumn(
+                        "Action",
+                        display_text="Buy Now 🔗", 
+                        validate="^https://.*"
+                    ),
+                },
+                hide_index=True,
+                use_container_width=True
+            )
