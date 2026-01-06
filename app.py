@@ -17,9 +17,10 @@ st.set_page_config(
 
 # --- CUSTOM CSS (FIXED FOR MENU ARROW) ---
 # --- CUSTOM CSS (FIXED FOR SIDEBAR CONTROLS) ---
+# --- CUSTOM CSS (SIDEBAR FIX) ---
 st.markdown("""
 <style>
-    /* 1. Hide the "Hamburger Menu" and "Deploy" button (Top Right) */
+    /* 1. Hide the "Deploy" button and the "Three Dots" menu */
     [data-testid="stToolbar"] {
         visibility: hidden;
     }
@@ -28,24 +29,33 @@ st.markdown("""
     [data-testid="stDecoration"] {
         visibility: hidden;
     }
-    
-    /* 3. Make the header background transparent (so it doesn't look ugly) 
-       BUT do not hide it, or you lose the sidebar arrows. */
+
+    /* 3. TARGET THE HEADER: 
+       Do NOT use 'display: none' or 'visibility: hidden'.
+       Instead, make it transparent so clicks pass through to the arrow. */
     [data-testid="stHeader"] {
-        background-color: rgba(0,0,0,0);
+        background-color: transparent;
+        color: transparent; /* Hides any accidental text */
     }
 
-    /* 4. FORCE the "Open Sidebar" arrow to be visible */
+    /* 4. FORCE THE ARROW TO BE VISIBLE 
+       This specific selector targets the arrow button when sidebar is closed. */
+    section[data-testid="stSidebar"] > div > div {
+        visibility: visible;
+    }
     [data-testid="stSidebarCollapsedControl"] {
         visibility: visible !important;
         display: block !important;
-        color: white !important; /* Force it to be white */
-        z-index: 999999 !important; /* Force it to sit on top of the video */
-        background-color: rgba(30, 30, 30, 0.5); /* Semi-transparent background box */
-        border-radius: 5px;
+        color: white !important;
+        background-color: rgba(100, 100, 100, 0.4); /* subtle box to see it */
+        border-radius: 50%;
+        padding: 5px;
     }
-
-    /* 5. General Font & Card Styling */
+    
+    /* 5. Clean up the rest */
+    footer {visibility: hidden;}
+    
+    /* Font & Cards */
     html, body, [class*="css"] {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
@@ -57,10 +67,6 @@ st.markdown("""
     }
     [data-testid="stMetricValue"] {
         color: #00FF7F !important;
-    }
-    div[data-testid="stToast"] {
-        background-color: #2b313e;
-        border: 1px solid #444;
     }
 </style>
 """, unsafe_allow_html=True)
