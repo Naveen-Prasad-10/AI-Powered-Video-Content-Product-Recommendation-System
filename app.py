@@ -15,14 +15,22 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CUSTOM CSS ---
+# --- CUSTOM CSS (FIXED FOR MENU ARROW) ---
 st.markdown("""
 <style>
-    /* Hide the default Streamlit header and footer */
-    header {visibility: hidden;}
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    
+    /* 1. Hiding the "Deploy" & "Hamburger" menu, but KEEPING the sidebar toggle */
+    [data-testid="stToolbar"] {
+        visibility: hidden;
+    }
+    [data-testid="stDecoration"] {
+        visibility: hidden;
+    }
+    /* We do NOT hide 'header' anymore, because that kills the sidebar arrow.
+       Instead, we make the header transparent so it looks invisible. */
+    [data-testid="stHeader"] {
+        background-color: rgba(0,0,0,0);
+    }
+
     /* Custom Font */
     html, body, [class*="css"] {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -54,26 +62,22 @@ st.markdown("""
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.header("Real-Time Detection Engine")
-    st.caption("v3.0 - MVP (Cloud Optimized)")
+    st.caption("v3.1 - MVP (UX Fixes)")
     st.divider()
     conf_threshold = st.slider("AI Sensitivity", 0.3, 1.0, 0.50, 0.05)
     
-    # PERFORMANCE CONTROL (Kept from your code)
     st.subheader("🚀 Performance Mode")
     frame_skip = st.slider("Frame Skip (Higher = Smoother)", 2, 10, 3)
     
-    # NEW: COOLDOWN CONTROL (Added)
     st.subheader("⏱️ Alert Settings")
     cooldown = st.slider("Cooldown Timer (Sec)", 1, 10, 5, help="Wait this many seconds before showing the same item again.")
 
-# --- RESOURCE LOADING (Kept your robust version) ---
+# --- RESOURCE LOADING ---
 @st.cache_resource
 def load_resources():
-    # 1. Define Standard Paths
     local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
     cloud_filename = "RTPD_v2.pt"
     
-    # 2. SMART SEARCH LOGIC
     model_path = None
     files = os.listdir(os.getcwd())
     
@@ -112,7 +116,7 @@ with col_title:
     st.markdown("""
     <h1 style='margin-bottom: 0px;'>ShopVision Pro</h1>
     <p style='color: #888; margin-top: 0px; font-size: 18px;'>
-        AI-Powered Video Commerce Engine • v3.0
+        AI-Powered Video Commerce Engine • v3.1
     </p>
     """, unsafe_allow_html=True)
 
@@ -123,7 +127,7 @@ uploaded_file = st.file_uploader("Upload Video Stream", type=["mp4", "mov", "avi
 # Initialize Session States
 if 'history' not in st.session_state:
     st.session_state.history = []
-if 'last_seen' not in st.session_state: # NEW: Memory for cooldowns
+if 'last_seen' not in st.session_state:
     st.session_state.last_seen = {}
 
 if uploaded_file:
@@ -140,17 +144,27 @@ if uploaded_file:
     with col_live:
         st.subheader("Live Market Data")
         live_alert = st.empty()
+        # Initial State
         with live_alert.container():
-             st.info("Waiting for video start...")
+             st.info("Ready to analyze. Click Start.")
 
     start_btn = st.button("▶️ Analyze Stream", type="primary")
     
     if start_btn:
         cap = cv2.VideoCapture(video_path)
         fps = int(cap.get(cv2.CAP_PROP_FPS))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # Get total duration
         if fps == 0: fps = 30
         
+        # 2. STATUS UPDATE: Processing Started
+        with live_alert.container():
+             st.spinner("Processing video feed...")
+        
         frame_count = 0
+        detections_found = False # Track if we found anything at all
+
+        # Progress Bar (Optional, adds professional touch)
+        progress_bar = st.progress(0)
         
         while cap.isOpened():
             ret, frame = cap.read()
@@ -158,18 +172,21 @@ if uploaded_file:
             
             frame_count += 1
             
-            # Use your Slider logic for skipping
+            # Update Progress Bar
+            if total_frames > 0:
+                progress_bar.progress(min(frame_count / total_frames, 1.0))
+
             if frame_count % frame_skip != 0: 
                 continue 
 
+            # Standard Processing
             frame = cv2.resize(frame, (640, 480))
             annotated_frame = frame.copy()
-
             results = model.predict(frame, conf=conf_threshold, verbose=False)
             
             if results[0].boxes:
+                detections_found = True # Mark that video wasn't empty
                 for box in results[0].boxes:
-                    # Geometry
                     x, y, w, h = box.xywh[0].cpu().numpy()
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
                     aspect_ratio = h / w
@@ -186,7 +203,6 @@ if uploaded_file:
                     cls_id = int(box.cls[0])
                     label = model.names[cls_id] 
                     
-                    # Database Lookup
                     lookup_key = f"{label}_{subtype}"
                     matched_product = PRODUCT_DB.get(lookup_key)
                     
@@ -201,26 +217,18 @@ if uploaded_file:
                         price = matched_product.get('price', 'N/A')
                         url = matched_product.get('url', '#')
                         
-                        # --- NEW COOLDOWN LOGIC ---
-                        # Calculate current time in seconds
                         current_time_sec = frame_count / fps
                         last_time = st.session_state.last_seen.get(product_name, -100)
                         
-                        # Only proceed if enough time has passed
                         if (current_time_sec - last_time) > cooldown:
-                            
-                            # Update memory
                             st.session_state.last_seen[product_name] = current_time_sec
                             
-                            # 1. Update Live Card
                             with live_alert.container():
                                 st.success(f"**Recommended:** {product_name}")
                                 st.metric("Best Price", price, f"Variant: {subtype}")
                             
-                            # 2. Show Toast (New Feature)
                             st.toast(f"✅ Found {product_name}!", icon="🛒")
 
-                            # 3. Add to History Table
                             entry_id = f"{frame_count}_{product_name}"
                             st.session_state.history.append({
                                 "id": entry_id,
@@ -234,6 +242,16 @@ if uploaded_file:
             video_window.image(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB), use_container_width=True)
 
         cap.release()
+        progress_bar.empty() # Hide bar when done
+
+        # 3. STATUS UPDATE: Processing Finished
+        with live_alert.container():
+            if detections_found:
+                 st.success("✅ Analysis Complete.")
+                 st.info("Scroll down to view shopping list.")
+            else:
+                 st.warning("⚠️ Analysis Complete: No products detected.")
+                 st.caption("Try lowering the AI Sensitivity slider or using a different video.")
 
     # --- RESULTS TABLE ---
     if st.session_state.history:
