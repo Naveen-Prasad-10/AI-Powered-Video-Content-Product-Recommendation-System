@@ -180,7 +180,7 @@ if uploaded_file:
                 continue 
 
             # Standard Processing
-            frame = cv2.resize(frame, (640, 480))
+            #frame = cv2.resize(frame, (640, 480))
             annotated_frame = frame.copy()
             results = model.predict(frame, conf=conf_threshold, verbose=False)
             
