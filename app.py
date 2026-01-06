@@ -5,144 +5,58 @@ import tempfile
 import os
 import json
 import pandas as pd
-import time
+import subprocess  # <--- NEEDED FOR THE FIX
 
-# --- PAGE CONFIGURATION ---
-st.set_page_config(
-    page_title="ShopVision Pro",
-    layout="wide",
-    page_icon="🛍️",
-    initial_sidebar_state="expanded"
-)
+# ... (Keep your imports and Page Config same as before) ...
 
-# --- CUSTOM CSS (FIXED FOR MENU ARROW + CLEAN UI) ---
-st.markdown("""
-<style>
-    /* 1. Hide the "Deploy" button and the "Three Dots" menu */
-    [data-testid="stToolbar"] {
-        visibility: hidden;
-    }
+# --- NEW FUNCTION: VIDEO SANITIZER ---
+def sanitize_video(input_path):
+    """
+    Force-converts video to a Linux-friendly format (H.264/MP4) 
+    using system FFMPEG. Fixes 'No frames found' errors on Colab.
+    """
+    output_path = input_path.replace(".mp4", "_fixed.mp4")
     
-    /* 2. Hide the colorful top decoration bar */
-    [data-testid="stDecoration"] {
-        visibility: hidden;
-    }
-
-    /* 3. TARGET THE HEADER: 
-       Make it transparent so clicks pass through to the arrow. */
-    [data-testid="stHeader"] {
-        background-color: transparent;
-        color: transparent; 
-    }
-
-    /* 4. FORCE THE ARROW TO BE VISIBLE */
-    section[data-testid="stSidebar"] > div > div {
-        visibility: visible;
-    }
-    [data-testid="stSidebarCollapsedControl"] {
-        visibility: visible !important;
-        display: block !important;
-        color: white !important;
-        background-color: rgba(100, 100, 100, 0.4); 
-        border-radius: 50%;
-        padding: 5px;
-        z-index: 999999; /* Force top layer */
-    }
+    # Simple FFMPEG command to re-encode video
+    # -y = overwrite, -vcodec libx264 = standard format, -preset ultrafast = speed over size
+    command = [
+        "ffmpeg", "-y", 
+        "-i", input_path,
+        "-vcodec", "libx264",
+        "-acodec", "aac", 
+        "-preset", "ultrafast", 
+        output_path
+    ]
     
-    /* 5. Font & Card Styling */
-    html, body, [class*="css"] {
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
-    div[data-testid="stMetric"] {
-        background-color: #1E1E1E;
-        border: 1px solid #333;
-        padding: 15px;
-        border-radius: 10px;
-    }
-    [data-testid="stMetricValue"] {
-        color: #00FF7F !important;
-    }
-    footer {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
+    try:
+        # Run conversion silently
+        subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return output_path
+    except Exception as e:
+        st.warning(f"⚠️ Video conversion failed. Trying original file. Error: {e}")
+        return input_path
 
-# --- SIDEBAR CONTROLS ---
-with st.sidebar:
-    st.header("Real-Time Detection Engine")
-    st.caption("v3.2 - Stable Release")
-    st.divider()
-    conf_threshold = st.slider("AI Sensitivity", 0.3, 1.0, 0.50, 0.05)
-    
-    st.subheader("🚀 Performance Mode")
-    frame_skip = st.slider("Frame Skip (Higher = Smoother)", 2, 10, 3)
-    
-    st.subheader("⏱️ Alert Settings")
-    cooldown = st.slider("Cooldown Timer (Sec)", 1, 10, 5, help="Wait this many seconds before showing the same item again.")
-
-# --- RESOURCE LOADING ---
-@st.cache_resource
-def load_resources():
-    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
-    cloud_filename = "RTPD_v2.pt"
-    
-    model_path = None
-    files = os.listdir(os.getcwd())
-    
-    if os.path.exists(cloud_filename):
-        model_path = cloud_filename
-    elif any(f.lower() == cloud_filename.lower() for f in files):
-        actual_name = next(f for f in files if f.lower() == cloud_filename.lower())
-        model_path = actual_name
-    elif os.path.exists(local_windows_path):
-        model_path = local_windows_path
-    else:
-        st.error(f"❌ Critical Error: Could not find '{cloud_filename}' in {os.getcwd()}")
-        st.stop()
-
-    model = YOLO(model_path)
-    
-    db = {}
-    db_file = "inventory.json"
-    if os.path.exists(db_file):
-        with open(db_file, 'r') as f:
-            db = json.load(f)
-            
-    return model, db
-
+# ... (Load resources function stays the same) ...
 model, PRODUCT_DB = load_resources()
 
-if not model:
-    st.error("⚠️ System Error: Model file not found.")
-    st.stop()
-
-# --- MAIN DASHBOARD ---
-col_logo, col_title = st.columns([0.1, 0.9])
-with col_logo:
-    st.markdown("# 🛍️")
-with col_title:
-    st.markdown("""
-    <h1 style='margin-bottom: 0px;'>ShopVision Pro</h1>
-    <p style='color: #888; margin-top: 0px; font-size: 18px;'>
-        AI-Powered Video Commerce Engine • v3.2
-    </p>
-    """, unsafe_allow_html=True)
-
-st.divider()
-
-uploaded_file = st.file_uploader("Upload Video Stream", type=["mp4", "mov", "avi"])
-
-# Initialize Session States
-if 'history' not in st.session_state:
-    st.session_state.history = []
-if 'last_seen' not in st.session_state:
-    st.session_state.last_seen = {}
+# ... (UI Setup stays the same) ...
 
 if uploaded_file:
-    tfile = tempfile.NamedTemporaryFile(delete=False) 
+    # 1. Save the Raw Upload
+    tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") 
     tfile.write(uploaded_file.read())
-    video_path = tfile.name
+    raw_video_path = tfile.name
 
     col_video, col_live = st.columns([0.65, 0.35])
+
+    # 2. RUN THE SANITIZER (The Fix)
+    with col_live:
+        with st.spinner("Preparing video engine..."):
+            video_path = sanitize_video(raw_video_path)
+
+    # 3. DEBUG: Show user if we swapped files (Optional, good for you to know)
+    # if video_path != raw_video_path:
+    #     st.toast("✅ Video optimized for Linux", icon="🔧")
 
     with col_video:
         st.subheader("Input Stream")
