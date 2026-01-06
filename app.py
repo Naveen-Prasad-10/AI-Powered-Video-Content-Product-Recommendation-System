@@ -5,20 +5,71 @@ import tempfile
 import os
 import json
 import pandas as pd
-import subprocess  # <--- NEEDED FOR THE FIX
+import subprocess  # Required for the Linux video fix
+import time
 
-# ... (Keep your imports and Page Config same as before) ...
+# --- PAGE CONFIGURATION ---
+st.set_page_config(
+    page_title="ShopVision Pro",
+    layout="wide",
+    page_icon="🛍️",
+    initial_sidebar_state="expanded"
+)
 
-# --- NEW FUNCTION: VIDEO SANITIZER ---
+# --- CUSTOM CSS ---
+st.markdown("""
+<style>
+    /* Hide default Streamlit clutter */
+    [data-testid="stToolbar"] { visibility: hidden; }
+    [data-testid="stDecoration"] { visibility: hidden; }
+    [data-testid="stHeader"] { background-color: transparent; color: transparent; }
+    
+    /* Force Sidebar Arrow Visibility */
+    section[data-testid="stSidebar"] > div > div { visibility: visible; }
+    [data-testid="stSidebarCollapsedControl"] {
+        visibility: visible !important;
+        display: block !important;
+        color: white !important;
+        background-color: rgba(100, 100, 100, 0.4); 
+        border-radius: 50%;
+        padding: 5px;
+        z-index: 999999;
+    }
+    
+    /* Styling */
+    html, body, [class*="css"] { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    div[data-testid="stMetric"] {
+        background-color: #1E1E1E;
+        border: 1px solid #333;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    [data-testid="stMetricValue"] { color: #00FF7F !important; }
+    footer {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
+# --- SIDEBAR CONTROLS ---
+with st.sidebar:
+    st.header("Real-Time Detection Engine")
+    st.caption("v3.4 - Cloud Production Build")
+    st.divider()
+    conf_threshold = st.slider("AI Sensitivity", 0.1, 1.0, 0.35, 0.05) 
+    
+    st.subheader("🚀 Performance Mode")
+    frame_skip = st.slider("Frame Skip (Higher = Smoother)", 2, 10, 3)
+    
+    st.subheader("⏱️ Alert Settings")
+    cooldown = st.slider("Cooldown Timer (Sec)", 1, 10, 5)
+
+# --- HELPER FUNCTION: VIDEO SANITIZER (FIXES CLOUD BUGS) ---
 def sanitize_video(input_path):
     """
-    Force-converts video to a Linux-friendly format (H.264/MP4) 
-    using system FFMPEG. Fixes 'No frames found' errors on Colab.
+    Force-converts video to a Linux-friendly format (H.264/MP4).
+    This prevents 'No frames found' errors on Streamlit Cloud/Colab.
     """
     output_path = input_path.replace(".mp4", "_fixed.mp4")
     
-    # Simple FFMPEG command to re-encode video
-    # -y = overwrite, -vcodec libx264 = standard format, -preset ultrafast = speed over size
     command = [
         "ffmpeg", "-y", 
         "-i", input_path,
@@ -32,31 +83,87 @@ def sanitize_video(input_path):
         # Run conversion silently
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return output_path
+    except FileNotFoundError:
+        # If ffmpeg is missing, warn but return original
+        st.warning("⚠️ FFMPEG not found. Using original file. (Add 'ffmpeg' to packages.txt if on Cloud)")
+        return input_path
     except Exception as e:
-        st.warning(f"⚠️ Video conversion failed. Trying original file. Error: {e}")
+        st.warning(f"⚠️ Optimization failed. Using original file. Error: {e}")
         return input_path
 
-# ... (Load resources function stays the same) ...
+# --- RESOURCE LOADING ---
+@st.cache_resource
+def load_resources():
+    # 1. Locate Model
+    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
+    cloud_filename = "RTPD_v2.pt"
+    
+    model_path = None
+    files = os.listdir(os.getcwd())
+    
+    if os.path.exists(cloud_filename):
+        model_path = cloud_filename
+    elif any(f.lower() == cloud_filename.lower() for f in files):
+        actual_name = next(f for f in files if f.lower() == cloud_filename.lower())
+        model_path = actual_name
+    elif os.path.exists(local_windows_path):
+        model_path = local_windows_path
+    else:
+        st.error(f"❌ Critical Error: Could not find '{cloud_filename}' in {os.getcwd()}")
+        st.stop()
+
+    # 2. Load Model & DB
+    model = YOLO(model_path)
+    
+    db = {}
+    db_file = "inventory.json"
+    if os.path.exists(db_file):
+        with open(db_file, 'r') as f:
+            db = json.load(f)
+            
+    return model, db
+
+# Initialize Resources
 model, PRODUCT_DB = load_resources()
 
-# ... (UI Setup stays the same) ...
+if not model:
+    st.error("⚠️ System Error: Model file not found.")
+    st.stop()
+
+# --- MAIN DASHBOARD ---
+col_logo, col_title = st.columns([0.1, 0.9])
+with col_logo:
+    st.markdown("# 🛍️")
+with col_title:
+    st.markdown("""
+    <h1 style='margin-bottom: 0px;'>ShopVision Pro</h1>
+    <p style='color: #888; margin-top: 0px; font-size: 18px;'>
+        AI-Powered Video Commerce Engine • v3.4
+    </p>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+uploaded_file = st.file_uploader("Upload Video Stream", type=["mp4", "mov", "avi"])
+
+# Initialize Session State
+if 'history' not in st.session_state:
+    st.session_state.history = []
+if 'last_seen' not in st.session_state:
+    st.session_state.last_seen = {}
 
 if uploaded_file:
-    # 1. Save the Raw Upload
+    # 1. Save Upload
     tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") 
     tfile.write(uploaded_file.read())
     raw_video_path = tfile.name
 
     col_video, col_live = st.columns([0.65, 0.35])
 
-    # 2. RUN THE SANITIZER (The Fix)
+    # 2. Run Sanitizer (The Cloud Fix)
     with col_live:
-        with st.spinner("Preparing video engine..."):
+        with st.spinner("Optimizing video format..."):
             video_path = sanitize_video(raw_video_path)
-
-    # 3. DEBUG: Show user if we swapped files (Optional, good for you to know)
-    # if video_path != raw_video_path:
-    #     st.toast("✅ Video optimized for Linux", icon="🔧")
 
     with col_video:
         st.subheader("Input Stream")
@@ -80,7 +187,6 @@ if uploaded_file:
              st.spinner("Processing video feed...")
         
         frame_count = 0
-        detections_found = False 
         progress_bar = st.progress(0)
         
         while cap.isOpened():
@@ -94,20 +200,16 @@ if uploaded_file:
             if frame_count % frame_skip != 0: 
                 continue 
 
-            # --- OPTIMIZATION LOGIC ---
-            # 1. Resize (Safe Mode): Only resize if huge. 
-            # If your old code worked with resize, you can uncomment the next line. 
-            # But usually, keeping original res is safer for detection.
-            # frame = cv2.resize(frame, (640, 480)) 
+            # --- PROCESS FRAME (Using Proven Logic) ---
+            # 1. Resize for speed
+            frame = cv2.resize(frame, (640, 480))
 
-            # 2. AI INFERENCE (THE FIX)
-            # We pass the raw 'frame' (BGR). We DO NOT convert to RGB for the model.
+            # 2. Predict (Using BGR, no RGB conversion needed for YOLOv8/11/12 usually)
             results = model.predict(frame, conf=conf_threshold, verbose=False)
             
             annotated_frame = frame.copy()
             
             if results[0].boxes:
-                detections_found = True
                 for box in results[0].boxes:
                     x, y, w, h = box.xywh[0].cpu().numpy()
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
@@ -125,9 +227,11 @@ if uploaded_file:
                     cls_id = int(box.cls[0])
                     label = model.names[cls_id] 
                     
+                    # Database Lookup
                     lookup_key = f"{label}_{subtype}"
                     matched_product = PRODUCT_DB.get(lookup_key)
                     
+                    # Fuzzy Fallback
                     if not matched_product:
                          for db_key in PRODUCT_DB:
                             if lookup_key.lower() == db_key.lower():
@@ -142,6 +246,7 @@ if uploaded_file:
                         current_time_sec = frame_count / fps
                         last_time = st.session_state.last_seen.get(product_name, -100)
                         
+                        # Cooldown Logic
                         if (current_time_sec - last_time) > cooldown:
                             st.session_state.last_seen[product_name] = current_time_sec
                             
@@ -161,20 +266,22 @@ if uploaded_file:
                                 "Link": url 
                             })
 
-            # 3. DISPLAY (Convert to RGB for Human Eyes only)
+            # Display Frame (Convert to RGB for Streamlit)
             video_window.image(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB), use_container_width=True)
 
         cap.release()
         progress_bar.empty()
 
+        # Final Status
         with live_alert.container():
-            if detections_found:
+            if len(st.session_state.history) > 0:
                  st.success("✅ Analysis Complete.")
-                 st.info("Scroll down to view shopping list.")
+                 st.info(f"Found {len(st.session_state.history)} items.")
             else:
                  st.warning("⚠️ Analysis Complete: No products detected.")
-                 st.caption("Try lowering the AI Sensitivity slider or using a different video.")
+                 st.caption("Try lowering 'AI Sensitivity' or using a different video.")
 
+    # Show Results Table
     if st.session_state.history:
         st.divider()
         st.subheader("🛒 Recommended Products")
