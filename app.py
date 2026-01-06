@@ -9,15 +9,13 @@ import time
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="AI-Powered Video Content Product Recommendation System",
+    page_title="ShopVision Pro",
     layout="wide",
     page_icon="🛍️",
     initial_sidebar_state="expanded"
 )
 
-# --- CUSTOM CSS (FIXED FOR MENU ARROW) ---
-# --- CUSTOM CSS (FIXED FOR SIDEBAR CONTROLS) ---
-# --- CUSTOM CSS (SIDEBAR FIX) ---
+# --- CUSTOM CSS (FIXED FOR MENU ARROW + CLEAN UI) ---
 st.markdown("""
 <style>
     /* 1. Hide the "Deploy" button and the "Three Dots" menu */
@@ -31,15 +29,13 @@ st.markdown("""
     }
 
     /* 3. TARGET THE HEADER: 
-       Do NOT use 'display: none' or 'visibility: hidden'.
-       Instead, make it transparent so clicks pass through to the arrow. */
+       Make it transparent so clicks pass through to the arrow. */
     [data-testid="stHeader"] {
         background-color: transparent;
-        color: transparent; /* Hides any accidental text */
+        color: transparent; 
     }
 
-    /* 4. FORCE THE ARROW TO BE VISIBLE 
-       This specific selector targets the arrow button when sidebar is closed. */
+    /* 4. FORCE THE ARROW TO BE VISIBLE */
     section[data-testid="stSidebar"] > div > div {
         visibility: visible;
     }
@@ -47,15 +43,13 @@ st.markdown("""
         visibility: visible !important;
         display: block !important;
         color: white !important;
-        background-color: rgba(100, 100, 100, 0.4); /* subtle box to see it */
+        background-color: rgba(100, 100, 100, 0.4); 
         border-radius: 50%;
         padding: 5px;
+        z-index: 999999; /* Force top layer */
     }
     
-    /* 5. Clean up the rest */
-    footer {visibility: hidden;}
-    
-    /* Font & Cards */
+    /* 5. Font & Card Styling */
     html, body, [class*="css"] {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
@@ -68,13 +62,14 @@ st.markdown("""
     [data-testid="stMetricValue"] {
         color: #00FF7F !important;
     }
+    footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.header("Real-Time Detection Engine")
-    st.caption("v3.1 - MVP (UX Fixes)")
+    st.caption("v3.2 - Stable Release")
     st.divider()
     conf_threshold = st.slider("AI Sensitivity", 0.3, 1.0, 0.50, 0.05)
     
@@ -128,7 +123,7 @@ with col_title:
     st.markdown("""
     <h1 style='margin-bottom: 0px;'>ShopVision Pro</h1>
     <p style='color: #888; margin-top: 0px; font-size: 18px;'>
-        AI-Powered Video Commerce Engine • v3.1
+        AI-Powered Video Commerce Engine • v3.2
     </p>
     """, unsafe_allow_html=True)
 
@@ -156,7 +151,6 @@ if uploaded_file:
     with col_live:
         st.subheader("Live Market Data")
         live_alert = st.empty()
-        # Initial State
         with live_alert.container():
              st.info("Ready to analyze. Click Start.")
 
@@ -165,17 +159,14 @@ if uploaded_file:
     if start_btn:
         cap = cv2.VideoCapture(video_path)
         fps = int(cap.get(cv2.CAP_PROP_FPS))
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # Get total duration
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         if fps == 0: fps = 30
         
-        # 2. STATUS UPDATE: Processing Started
         with live_alert.container():
              st.spinner("Processing video feed...")
         
         frame_count = 0
-        detections_found = False # Track if we found anything at all
-
-        # Progress Bar (Optional, adds professional touch)
+        detections_found = False 
         progress_bar = st.progress(0)
         
         while cap.isOpened():
@@ -183,23 +174,26 @@ if uploaded_file:
             if not ret: break
             
             frame_count += 1
-            
-            # Update Progress Bar
             if total_frames > 0:
                 progress_bar.progress(min(frame_count / total_frames, 1.0))
 
             if frame_count % frame_skip != 0: 
                 continue 
 
-            # Standard Processing
-            #frame = cv2.resize(frame, (640, 480))
-            frame_for_model = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = model.predict(frame_for_model, conf=conf_threshold, verbose=False)
-            annotated_frame = frame.copy() # Keep the original BGR frame for drawing boxes later
-            #results = model.predict(frame, conf=conf_threshold, verbose=False)
+            # --- OPTIMIZATION LOGIC ---
+            # 1. Resize (Safe Mode): Only resize if huge. 
+            # If your old code worked with resize, you can uncomment the next line. 
+            # But usually, keeping original res is safer for detection.
+            # frame = cv2.resize(frame, (640, 480)) 
+
+            # 2. AI INFERENCE (THE FIX)
+            # We pass the raw 'frame' (BGR). We DO NOT convert to RGB for the model.
+            results = model.predict(frame, conf=conf_threshold, verbose=False)
+            
+            annotated_frame = frame.copy()
             
             if results[0].boxes:
-                detections_found = True # Mark that video wasn't empty
+                detections_found = True
                 for box in results[0].boxes:
                     x, y, w, h = box.xywh[0].cpu().numpy()
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
@@ -253,12 +247,12 @@ if uploaded_file:
                                 "Link": url 
                             })
 
+            # 3. DISPLAY (Convert to RGB for Human Eyes only)
             video_window.image(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB), use_container_width=True)
 
         cap.release()
-        progress_bar.empty() # Hide bar when done
+        progress_bar.empty()
 
-        # 3. STATUS UPDATE: Processing Finished
         with live_alert.container():
             if detections_found:
                  st.success("✅ Analysis Complete.")
@@ -267,7 +261,6 @@ if uploaded_file:
                  st.warning("⚠️ Analysis Complete: No products detected.")
                  st.caption("Try lowering the AI Sensitivity slider or using a different video.")
 
-    # --- RESULTS TABLE ---
     if st.session_state.history:
         st.divider()
         st.subheader("🛒 Recommended Products")
