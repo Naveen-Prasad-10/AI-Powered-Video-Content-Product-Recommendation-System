@@ -16,42 +16,48 @@ st.set_page_config(
 )
 
 # --- CUSTOM CSS (FIXED FOR MENU ARROW) ---
+# --- CUSTOM CSS (FIXED FOR SIDEBAR CONTROLS) ---
 st.markdown("""
 <style>
-    /* 1. Hiding the "Deploy" & "Hamburger" menu, but KEEPING the sidebar toggle */
+    /* 1. Hide the "Hamburger Menu" and "Deploy" button (Top Right) */
     [data-testid="stToolbar"] {
         visibility: hidden;
     }
+    
+    /* 2. Hide the colorful top decoration bar */
     [data-testid="stDecoration"] {
         visibility: hidden;
     }
-    /* We do NOT hide 'header' anymore, because that kills the sidebar arrow.
-       Instead, we make the header transparent so it looks invisible. */
+    
+    /* 3. Make the header background transparent (so it doesn't look ugly) 
+       BUT do not hide it, or you lose the sidebar arrows. */
     [data-testid="stHeader"] {
         background-color: rgba(0,0,0,0);
     }
 
-    /* Custom Font */
+    /* 4. FORCE the "Open Sidebar" arrow to be visible */
+    [data-testid="stSidebarCollapsedControl"] {
+        visibility: visible !important;
+        display: block !important;
+        color: white !important; /* Force it to be white */
+        z-index: 999999 !important; /* Force it to sit on top of the video */
+        background-color: rgba(30, 30, 30, 0.5); /* Semi-transparent background box */
+        border-radius: 5px;
+    }
+
+    /* 5. General Font & Card Styling */
     html, body, [class*="css"] {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
-    
-    /* Card Styling */
     div[data-testid="stMetric"] {
         background-color: #1E1E1E;
         border: 1px solid #333;
         padding: 15px;
         border-radius: 10px;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
     }
-    
-    /* Green Highlight */
     [data-testid="stMetricValue"] {
         color: #00FF7F !important;
-        font-size: 36px !important;
     }
-    
-    /* Toast Styling */
     div[data-testid="stToast"] {
         background-color: #2b313e;
         border: 1px solid #444;
