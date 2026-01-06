@@ -14,7 +14,35 @@ st.set_page_config(
     page_icon="🛍️",
     initial_sidebar_state="expanded"
 )
-
+# --- CUSTOM CSS ---
+st.markdown("""
+<style>
+    /* Hide the default Streamlit header and footer */
+    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* Custom Font for the whole app */
+    html, body, [class*="css"] {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    
+    /* Card Styling for Metrics */
+    div[data-testid="stMetric"] {
+        background-color: #1E1E1E;
+        border: 1px solid #333;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    /* "Best Price" Green Highlight */
+    [data-testid="stMetricValue"] {
+        color: #00FF7F !important;
+        font-size: 36px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 # --- CSS FOR PERFORMANCE ---
 st.markdown("""
 <style>
@@ -96,7 +124,22 @@ if not model:
     st.stop()
 
 # --- MAIN DASHBOARD ---
-st.title("Real-Time Product Detection & Recommendation")
+# --- HERO SECTION ---
+col_logo, col_title = st.columns([0.1, 0.9])
+
+with col_logo:
+    # You can replace this with st.image("logo.png") if you have one
+    st.markdown("# 🛍️")
+
+with col_title:
+    st.markdown("""
+    <h1 style='margin-bottom: 0px;'>ShopVision Pro</h1>
+    <p style='color: #888; margin-top: 0px; font-size: 18px;'>
+        AI-Powered Video Commerce Engine • v3.0
+    </p>
+    """, unsafe_allow_html=True)
+
+st.divider() # Adds a clean horizontal line
 st.markdown("Upload a video stream to detect products and retrieve **real-time pricing**.")
 
 uploaded_file = st.file_uploader("", type=["mp4", "mov", "avi"])
@@ -117,8 +160,17 @@ if uploaded_file:
         video_window = st.empty()
     
     with col_live:
-        st.subheader("Recommendation Feed")
+        st.subheader("Live Market Data")
         live_alert = st.empty()
+        
+        # --- EMPTY STATE (Shows before video starts) ---
+        with live_alert.container():
+            st.markdown("""
+            <div style='text-align: center; color: #666; padding: 50px;'>
+                <h3>Waiting for video...</h3>
+                <p>Upload a file to start tracking real-time prices.</p>
+            </div>
+            """, unsafe_allow_html=True)
 
     start_btn = st.button("▶️ Analyze Stream", type="primary")
     
