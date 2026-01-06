@@ -193,8 +193,10 @@ if uploaded_file:
 
             # Standard Processing
             #frame = cv2.resize(frame, (640, 480))
-            annotated_frame = frame.copy()
-            results = model.predict(frame, conf=conf_threshold, verbose=False)
+            frame_for_model = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = model.predict(frame_for_model, conf=conf_threshold, verbose=False)
+            annotated_frame = frame.copy() # Keep the original BGR frame for drawing boxes later
+            #results = model.predict(frame, conf=conf_threshold, verbose=False)
             
             if results[0].boxes:
                 detections_found = True # Mark that video wasn't empty
