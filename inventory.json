@@ -1,22 +1,350 @@
 {
     "pepsi_Can": {
         "name": "Pepsi Can (330ml)",
-        "price": "Rs.40",
-        "url": "https://www.bigbasket.com/pd/40327060/pepsi-soft-drink-330-ml"
+        "vendors": [
+            {
+                "vendor_name": "JioMart",
+                "price": 32.01,
+                "delivery_time": 240,
+                "rating": 3.9,
+                "url": "https://www.google.com/search?q=JioMart%20Pepsi%20can%20330ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Amazon",
+                "price": 33.0,
+                "delivery_time": 1440,
+                "rating": 4.3,
+                "url": "https://www.amazon.in/s?k=Pepsi%20can%20330ml",
+                "source": "amazon_in"
+            },
+            {
+                "vendor_name": "BigBasket",
+                "price": 33.66,
+                "delivery_time": 360,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=BigBasket%20Pepsi%20can%20330ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Zepto",
+                "price": 34.65,
+                "delivery_time": 15,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=Zepto%20Pepsi%20can%20330ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Blinkit",
+                "price": 35.64,
+                "delivery_time": 12,
+                "rating": 4.4,
+                "url": "https://www.google.com/search?q=Blinkit%20Pepsi%20can%20330ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Swiggy Instamart",
+                "price": 36.3,
+                "delivery_time": 20,
+                "rating": 4.2,
+                "url": "https://www.google.com/search?q=Swiggy%20Instamart%20Pepsi%20can%20330ml",
+                "source": "platform_model"
+            }
+        ],
+        "scraped_at": "2026-02-22T22:30:39",
+        "sources_used": [
+            "platform_model",
+            "amazon_in"
+        ]
     },
     "pepsi_Bottle": {
         "name": "Pepsi Bottle (750ml)",
-        "price": "Rs.37",
-        "url": "https://www.bigbasket.com/pd/251047/pepsi-soft-drink-750-ml/"
+        "vendors": [
+            {
+                "vendor_name": "JioMart",
+                "price": 38.8,
+                "delivery_time": 240,
+                "rating": 3.9,
+                "url": "https://www.google.com/search?q=JioMart%20Pepsi%20soft%20drink%20750ml%20bottle",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Amazon",
+                "price": 40.0,
+                "delivery_time": 1440,
+                "rating": 4.2,
+                "url": "https://www.amazon.in/s?k=Pepsi%20soft%20drink%20750ml%20bottle",
+                "source": "amazon_in"
+            },
+            {
+                "vendor_name": "BigBasket",
+                "price": 40.8,
+                "delivery_time": 360,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=BigBasket%20Pepsi%20soft%20drink%20750ml%20bottle",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Zepto",
+                "price": 42.0,
+                "delivery_time": 15,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=Zepto%20Pepsi%20soft%20drink%20750ml%20bottle",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Blinkit",
+                "price": 43.2,
+                "delivery_time": 12,
+                "rating": 4.4,
+                "url": "https://www.google.com/search?q=Blinkit%20Pepsi%20soft%20drink%20750ml%20bottle",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Swiggy Instamart",
+                "price": 44.0,
+                "delivery_time": 20,
+                "rating": 4.2,
+                "url": "https://www.google.com/search?q=Swiggy%20Instamart%20Pepsi%20soft%20drink%20750ml%20bottle",
+                "source": "platform_model"
+            }
+        ],
+        "scraped_at": "2026-02-22T22:30:45",
+        "sources_used": [
+            "platform_model",
+            "amazon_in"
+        ]
     },
     "coca_cola_Can": {
         "name": "Coke Can (300ml)",
-        "price": "Rs.34",
-        "url": "https://www.bigbasket.com/pd/100401160/coca-cola-soft-drink-original-taste-300-ml-can/"
+        "vendors": [
+            {
+                "vendor_name": "JioMart",
+                "price": 32.98,
+                "delivery_time": 240,
+                "rating": 3.9,
+                "url": "https://www.google.com/search?q=JioMart%20Coca%20Cola%20can%20300ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Amazon",
+                "price": 34.0,
+                "delivery_time": 1440,
+                "rating": 4.5,
+                "url": "https://www.amazon.in/s?k=Coca%20Cola%20can%20300ml",
+                "source": "amazon_in"
+            },
+            {
+                "vendor_name": "BigBasket",
+                "price": 34.68,
+                "delivery_time": 360,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=BigBasket%20Coca%20Cola%20can%20300ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Zepto",
+                "price": 35.7,
+                "delivery_time": 15,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=Zepto%20Coca%20Cola%20can%20300ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Blinkit",
+                "price": 36.72,
+                "delivery_time": 12,
+                "rating": 4.4,
+                "url": "https://www.google.com/search?q=Blinkit%20Coca%20Cola%20can%20300ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Swiggy Instamart",
+                "price": 37.4,
+                "delivery_time": 20,
+                "rating": 4.2,
+                "url": "https://www.google.com/search?q=Swiggy%20Instamart%20Coca%20Cola%20can%20300ml",
+                "source": "platform_model"
+            }
+        ],
+        "scraped_at": "2026-02-22T22:30:50",
+        "sources_used": [
+            "platform_model",
+            "amazon_in"
+        ]
     },
     "coca_cola_Bottle": {
         "name": "Coke Bottle (750ml)",
-        "price": "Rs.31",
-        "url": "https://www.bigbasket.com/pd/251023/coca-cola-soft-drink-original-taste-750-ml-pet-bottle/"
+        "vendors": [
+            {
+                "vendor_name": "JioMart",
+                "price": 38.8,
+                "delivery_time": 240,
+                "rating": 3.9,
+                "url": "https://www.google.com/search?q=JioMart%20Coca%20Cola%20750ml%20bottle",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Amazon",
+                "price": 40.0,
+                "delivery_time": 1440,
+                "rating": 4.4,
+                "url": "https://www.amazon.in/s?k=Coca%20Cola%20750ml%20bottle",
+                "source": "amazon_in"
+            },
+            {
+                "vendor_name": "BigBasket",
+                "price": 40.8,
+                "delivery_time": 360,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=BigBasket%20Coca%20Cola%20750ml%20bottle",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Zepto",
+                "price": 42.0,
+                "delivery_time": 15,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=Zepto%20Coca%20Cola%20750ml%20bottle",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Blinkit",
+                "price": 43.2,
+                "delivery_time": 12,
+                "rating": 4.4,
+                "url": "https://www.google.com/search?q=Blinkit%20Coca%20Cola%20750ml%20bottle",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Swiggy Instamart",
+                "price": 44.0,
+                "delivery_time": 20,
+                "rating": 4.2,
+                "url": "https://www.google.com/search?q=Swiggy%20Instamart%20Coca%20Cola%20750ml%20bottle",
+                "source": "platform_model"
+            }
+        ],
+        "scraped_at": "2026-02-22T22:30:56",
+        "sources_used": [
+            "platform_model",
+            "amazon_in"
+        ]
+    },
+    "dove_Soap": {
+        "name": "Dove Cream Beauty Bar (100g)",
+        "vendors": [
+            {
+                "vendor_name": "JioMart",
+                "price": 58.2,
+                "delivery_time": 240,
+                "rating": 3.9,
+                "url": "https://www.google.com/search?q=JioMart%20Dove%20beauty%20bar%20soap%20100g",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Amazon",
+                "price": 60.0,
+                "delivery_time": 1440,
+                "rating": 4.4,
+                "url": "https://www.amazon.in/s?k=Dove%20beauty%20bar%20soap%20100g",
+                "source": "amazon_in"
+            },
+            {
+                "vendor_name": "BigBasket",
+                "price": 61.2,
+                "delivery_time": 360,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=BigBasket%20Dove%20beauty%20bar%20soap%20100g",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Zepto",
+                "price": 63.0,
+                "delivery_time": 15,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=Zepto%20Dove%20beauty%20bar%20soap%20100g",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Blinkit",
+                "price": 64.8,
+                "delivery_time": 12,
+                "rating": 4.4,
+                "url": "https://www.google.com/search?q=Blinkit%20Dove%20beauty%20bar%20soap%20100g",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Swiggy Instamart",
+                "price": 66.0,
+                "delivery_time": 20,
+                "rating": 4.2,
+                "url": "https://www.google.com/search?q=Swiggy%20Instamart%20Dove%20beauty%20bar%20soap%20100g",
+                "source": "platform_model"
+            }
+        ],
+        "scraped_at": "2026-02-22T22:31:02",
+        "sources_used": [
+            "platform_model",
+            "amazon_in"
+        ]
+    },
+    "dove_Shampoo": {
+        "name": "Dove Intense Repair Shampoo (180ml)",
+        "vendors": [
+            {
+                "vendor_name": "JioMart",
+                "price": 145.5,
+                "delivery_time": 240,
+                "rating": 3.9,
+                "url": "https://www.google.com/search?q=JioMart%20Dove%20intense%20repair%20shampoo%20180ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Amazon",
+                "price": 150.0,
+                "delivery_time": 1440,
+                "rating": 4.4,
+                "url": "https://www.amazon.in/s?k=Dove%20intense%20repair%20shampoo%20180ml",
+                "source": "amazon_in"
+            },
+            {
+                "vendor_name": "BigBasket",
+                "price": 153.0,
+                "delivery_time": 360,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=BigBasket%20Dove%20intense%20repair%20shampoo%20180ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Zepto",
+                "price": 157.5,
+                "delivery_time": 15,
+                "rating": 4.3,
+                "url": "https://www.google.com/search?q=Zepto%20Dove%20intense%20repair%20shampoo%20180ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Blinkit",
+                "price": 162.0,
+                "delivery_time": 12,
+                "rating": 4.4,
+                "url": "https://www.google.com/search?q=Blinkit%20Dove%20intense%20repair%20shampoo%20180ml",
+                "source": "platform_model"
+            },
+            {
+                "vendor_name": "Swiggy Instamart",
+                "price": 165.0,
+                "delivery_time": 20,
+                "rating": 4.2,
+                "url": "https://www.google.com/search?q=Swiggy%20Instamart%20Dove%20intense%20repair%20shampoo%20180ml",
+                "source": "platform_model"
+            }
+        ],
+        "scraped_at": "2026-02-22T22:31:08",
+        "sources_used": [
+            "platform_model",
+            "amazon_in"
+        ]
     }
 }
