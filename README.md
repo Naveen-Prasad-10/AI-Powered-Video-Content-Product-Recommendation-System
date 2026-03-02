@@ -1,41 +1,41 @@
-# 🛍️ AI-Powered Video Content Product Recommendation System
+# 🛍️ ShopVision Pro: Real-Time Detection & Multi-Criteria Vendor Optimization
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red) ![YOLO](https://img.shields.io/badge/AI-YOLOv12--Nano-green) ![Status](https://img.shields.io/badge/Status-Prototype%20v3.0-orange)
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![Framework](https://img.shields.io/badge/Framework-FastAPI-009688) ![AI](https://img.shields.io/badge/AI-YOLOv12--Nano-green) ![Math](https://img.shields.io/badge/Math-NumPy-blueviolet) ![Status](https://img.shields.io/badge/Status-Research%20Prototype%20v4.0-orange)
 
-This project focuses on the development of an AI-powered system that analyzes video content in real-time to identify consumer products and provide relevant purchasing options.
+ShopVision Pro is an AI-powered Decision Support System that bridges the gap between visual media and actionable consumer intelligence. 
 
-By combining computer vision–based object detection with a backend data handler, the system aims to bridge the gap between visual media and actionable product information. The current release (**v3**) introduces a web-based dashboard for video analysis.
-
-> **🚀 Live Demo:** https://ai-powered-video-content-appuct-recommendation-system-bhwz7ikh.streamlit.app/
+Moving beyond standard object detection, this system utilizes a decoupled "Eye-to-Brain" architecture. It detects consumer products in real-time video feeds and passes them through a custom mathematical optimization algorithm to instantly calculate and recommend the optimal purchasing path across multiple e-commerce vendors.
 
 ---
+
+## ✨ Key Research Innovations (v4.0)
+
+### 1. 🧠 The "Eye": Optimized Perception Layer
+* **Model:** Fine-tuned **YOLOv12-Nano** model detects broad brand classes (e.g., Pepsi, Coca-Cola) running efficiently on consumer-grade edge hardware.
+* **Agnostic NMS & Color Correction:** Implements strict BGR-to-RGB conversion pipelines and Non-Maximum Suppression to eliminate false-positive ghosting.
+* **Geometric Sub-typing:** Custom Aspect Ratio Algorithm mathematically distinguishes between sub-variants without inflating the neural network class count:
+  * *Ratio > 2.7* ➔ Classified as **Bottle**.
+  * *Ratio < 2.7* ➔ Classified as **Can**.
 
 ## 📸 Interface Preview
 <img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 214649.png" />
 <img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 215107.png" />
+### 2. 🧮 The "Brain": Non-Linear Dynamic Utility (NDU) Framework
+Instead of relying on rudimentary "Sort by Lowest Price" logic, this system introduces a custom mathematical optimizer to mimic human consumer behavior. For every detected item, the system calculates a Utility Score (U) for competing vendors (Amazon, Blinkit, Zepto, etc.) using exponential decay and logarithmic growth:
 
-### ✨ Key Features (v3.0)
+**U = [W_p × e^(-γ × P)] + [W_t × e^(-δ × T)] + [W_r × ln(1 + R)]**
 
-### 1. 📹 Multi-Source Analysis
-* **Video Upload:** Drag-and-drop support for MP4, MOV, and AVI files.
-* **YouTube Integration:** Fetches and processes video directly from YouTube links (using `yt-dlp`).
+* **P, T, R:** Min-Max normalized values for Price, Delivery Time, and Rating.
+* **W (Weights):** Dynamic weights adjusted based on the product profile (e.g., high delivery weight for impulse items like cold soda; high price weight for bulk items like shampoo).
+* **γ, δ (Decay Constants):** Controls how aggressively a vendor is penalized for slow delivery or high prices.
 
-### 2. 🧠 Hybrid Detection Logic
-* **Brand Recognition:** Fine-tuned **YOLOv12-Nano** model detects broad brand classes (e.g., Pepsi, Coke).
-* **Geometric Sub-typing:** Custom **Aspect Ratio Algorithm** mathematically distinguishes between sub-variants without needing extra training classes:
-    * *Ratio > 2.7* ➔ Classified as **Bottle**.
-    * *Ratio < 2.7* ➔ Classified as **Can**.
+### 3. ⚡ High-Speed FastAPI Engine
+* **Streaming Architecture:** Migrated from Streamlit to a native FastAPI asynchronous backend, ensuring <16ms latency for the video generator loop.
+* **Persistent Session Memory:** Tracks object history dynamically to prevent shopping cart duplication loops during streaming video playback.
 
-### 3. 📝 Multi-Vendor Link Support (Prototype)
-* **Static Database:** Maps detected products to a local JSON registry (`inventory.json`).
-* **Vendor Selection:** Demonstrates the architecture for handling multiple sellers (e.g., BigBasket vs. Amazon).
-* *Note: Live price comparison across real-time vendor data is planned for v4.*
-
-### 4. 🛒 The "Shoppable Timeline"
-* **Session History:** Builds a persistent shopping list as the video plays.
-* **Interactive UI:** detected items appear in a clean data table with **direct "Purchase" buttons**.
-
----
+### 4. 🛒 Smart Recommendation Dashboard
+* **Shoppable Timeline:** Detected items populate a clean HTML/JS sidebar.
+* **Mathematical Transparency:** Instead of just a "Buy" button, the UI presents the #1 mathematically ranked vendor alongside the logic of why it won the utility calculation.
 
 ## 🛠️ Technical Stack
 
@@ -47,27 +47,38 @@ By combining computer vision–based object detection with a backend data handle
 
 ---
 
-## 💻 Quick Start (for local testing)
+## 🛠️ Technical Stack
+
+* **Backend/API:** FastAPI & Uvicorn (Asynchronous Web Server)
+* **AI Engine:** Ultralytics YOLOv12-Nano (PyTorch)
+* **Computer Vision:** OpenCV (Headless) & PIL
+* **Mathematical Optimization:** NumPy
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript (Server-Side Rendered)
+
+---
+
+## 💻 Quick Start (Local Deployment)
+
 ### 1. Clone the Repository
-The repo contains the requirements,model weights as well as the necessary web framework to run the project locally, at lower latency.
+Clone the repository to your local machine. This package includes the required API architecture and the `inventory.json` simulated market cache.
 
 ### 2. Install Dependencies
-Ensure you have Python installed, then run:
+Ensure you have Python 3.9+ installed, then run:
+`pip install -r requirements.txt`
 
- `pip install -r requirements.txt` 
+### 3. Ensure Model Weights
+Place your fine-tuned model weights (e.g., `RTPD_v2.pt`) in the root directory. If not found, the system will safely fallback to a default `yolov8n.pt` model.
 
-### 2. Download Model Weights
+### 4. Run the Engine
+Launch the Uvicorn ASGI server to start the application:
+`python -m uvicorn main:app --reload`
 
-### 3. Run the Dashboard
-Launch the web server locally:
-`streamlit run app.py` or `python -m streamlit run app.py`
-### Future Roadmap
-Competitive Pricing Engine: Integrate live scraping APIs (e.g., RapidAPI) to compare prices in real-time.
+Navigate to `http://127.0.0.1:8000` in your browser to access the live dashboard.
 
-User Accounts: Allow users to save their "Wishlist" across sessions.
+---
 
-Mobile App: Convert the Streamlit prototype into a native React Native application.
+## 🚀 Future Roadmap
+* **Dynamic Review Clustering:** Implementation of K-Means clustering (using `scikit-learn` and text embeddings) to autonomously group and display qualitative user reviews (e.g., "Shipping Issues" vs. "Great Value").
+* **Live API Integration:** Replacing the `inventory.json` static cache with live scraping endpoints to feed real-time pricing data into the NDU equation.
 
-> 📝 License: 
-This project is open-source and available under the MIT License.
-
+> **📝 License:** This project is open-source and available under the MIT License.
