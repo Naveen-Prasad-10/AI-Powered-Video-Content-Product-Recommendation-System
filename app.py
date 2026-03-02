@@ -5,8 +5,16 @@ import tempfile
 import os
 import json
 import pandas as pd
-import subprocess  # Required for the Linux video fix
 import time
+from datetime import datetime, timezone
+from optimizer import rank_vendors
+
+# Scraper is optional — gracefully skip if dependencies aren't installed
+try:
+    from scraper import run as _scrape_inventory
+    SCRAPER_AVAILABLE = True
+except ImportError:
+    SCRAPER_AVAILABLE = False
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -16,16 +24,30 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CUSTOM CSS ---
+# --- CUSTOM CSS (FIXED FOR MENU ARROW + CLEAN UI) ---
 st.markdown("""
 <style>
-    /* Hide default Streamlit clutter */
-    [data-testid="stToolbar"] { visibility: hidden; }
-    [data-testid="stDecoration"] { visibility: hidden; }
-    [data-testid="stHeader"] { background-color: transparent; color: transparent; }
+    /* 1. Hide the "Deploy" button and the "Three Dots" menu */
+    [data-testid="stToolbar"] {
+        visibility: hidden;
+    }
     
-    /* Force Sidebar Arrow Visibility */
-    section[data-testid="stSidebar"] > div > div { visibility: visible; }
+    /* 2. Hide the colorful top decoration bar */
+    [data-testid="stDecoration"] {
+        visibility: hidden;
+    }
+
+    /* 3. TARGET THE HEADER: 
+       Make it transparent so clicks pass through to the arrow. */
+    [data-testid="stHeader"] {
+        background-color: transparent;
+        color: transparent; 
+    }
+
+    /* 4. FORCE THE ARROW TO BE VISIBLE */
+    section[data-testid="stSidebar"] > div > div {
+        visibility: visible;
+    }
     [data-testid="stSidebarCollapsedControl"] {
         visibility: visible !important;
         display: block !important;
@@ -33,70 +55,133 @@ st.markdown("""
         background-color: rgba(100, 100, 100, 0.4); 
         border-radius: 50%;
         padding: 5px;
-        z-index: 999999;
+        z-index: 999999; /* Force top layer */
     }
     
-    /* Styling */
-    html, body, [class*="css"] { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    /* 5. Font & Card Styling */
+    html, body, [class*="css"] {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
     div[data-testid="stMetric"] {
         background-color: #1E1E1E;
         border: 1px solid #333;
         padding: 15px;
         border-radius: 10px;
     }
-    [data-testid="stMetricValue"] { color: #00FF7F !important; }
+    [data-testid="stMetricValue"] {
+        color: #00FF7F !important;
+    }
     footer {visibility: hidden;}
+
+    /* ── NDU Smart Recommendation Cards ─────────────────── */
+    .ndu-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border: 1px solid #00FF7F;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 18px rgba(0, 255, 127, 0.12);
+    }
+    .ndu-badge {
+        background: #00FF7F;
+        color: #000;
+        font-weight: 700;
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    .utility-score {
+        font-size: 24px;
+        font-weight: 800;
+        color: #00FF7F;
+        font-family: 'Courier New', monospace;
+    }
+    .alt-vendor {
+        background: rgba(255, 255, 255, 0.04);
+        border-left: 3px solid #f0a500;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #bbb;
+    }
+    .why-pill {
+        background: rgba(0, 255, 127, 0.08);
+        border-radius: 6px;
+        padding: 5px 10px;
+        font-size: 12px;
+        color: #ddd;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.header("Real-Time Detection Engine")
-    st.caption("v3.4 - Cloud Production Build")
+    st.caption("v4.0 — NDU Engine")
     st.divider()
-    conf_threshold = st.slider("AI Sensitivity", 0.1, 1.0, 0.35, 0.05) 
-    
+    conf_threshold = st.slider("AI Sensitivity", 0.3, 1.0, 0.50, 0.05)
+
     st.subheader("🚀 Performance Mode")
     frame_skip = st.slider("Frame Skip (Higher = Smoother)", 2, 10, 3)
-    
-    st.subheader("⏱️ Alert Settings")
-    cooldown = st.slider("Cooldown Timer (Sec)", 1, 10, 5)
 
-# --- HELPER FUNCTION: VIDEO SANITIZER (FIXES CLOUD BUGS) ---
-def sanitize_video(input_path):
-    """
-    Force-converts video to a Linux-friendly format (H.264/MP4).
-    This prevents 'No frames found' errors on Streamlit Cloud/Colab.
-    """
-    output_path = input_path.replace(".mp4", "_fixed.mp4")
-    
-    command = [
-        "ffmpeg", "-y", 
-        "-i", input_path,
-        "-vcodec", "libx264",
-        "-acodec", "aac", 
-        "-preset", "ultrafast", 
-        output_path
-    ]
-    
-    try:
-        # Run conversion silently
-        subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return output_path
-    except FileNotFoundError:
-        # If ffmpeg is missing, warn but return original
-        st.warning("⚠️ FFMPEG not found. Using original file. (Add 'ffmpeg' to packages.txt if on Cloud)")
-        return input_path
-    except Exception as e:
-        st.warning(f"⚠️ Optimization failed. Using original file. Error: {e}")
-        return input_path
+    st.subheader("⏱️ Alert Settings")
+    cooldown = st.slider("Cooldown Timer (Sec)", 1, 10, 5,
+                         help="Wait this many seconds before showing the same item again.")
+
+    st.divider()
+
+    # —— Price Freshness Panel ———————————————————————————
+    st.subheader("💰 Price Data")
+    _db_for_date = json.load(open("inventory.json")) if os.path.exists("inventory.json") else {}
+    if _db_for_date:
+        _sample = next(iter(_db_for_date.values()))
+        _scraped_at_str = _sample.get("scraped_at", "")
+        if _scraped_at_str:
+            try:
+                _scraped_dt  = datetime.fromisoformat(_scraped_at_str)
+                _age_hours   = (datetime.now() - _scraped_dt).total_seconds() / 3600
+                _age_label   = f"{_age_hours:.0f}h ago" if _age_hours >= 1 else "just now"
+                st.caption(f"📅 Last refreshed: {_scraped_at_str[:10]}  ({_age_label})")
+                if _age_hours > 24:
+                    st.warning("⚠️ Price data is over 24h old. Click Refresh.", icon="📅")
+            except ValueError:
+                st.caption(f"📅 Last refreshed: {_scraped_at_str[:10]}")
+
+    if SCRAPER_AVAILABLE:
+        if st.button("🔄 Refresh Prices", help="Re-scrape Amazon & Bing and update inventory.json"):
+            with st.spinner("🔄 Fetching latest prices from Amazon & Bing... (this takes ~30s)"):
+                _scrape_inventory()
+            st.cache_resource.clear()   # force model + DB reload
+            st.success("✅ Prices updated!")
+            st.rerun()
+    else:
+        st.caption("⚠️ Scraper unavailable (`pip install requests beautifulsoup4`)")
+
+    st.divider()
+    with st.expander("⚙️ NDU Weight Tuner", expanded=False):
+        st.caption("Adjust utility function weights. Changes apply on the next detection event.")
+        ndu_wp = st.slider("Price Weight (wₚ)",  0.10, 0.80, 0.40, 0.05,
+                           help="Exponential penalty on high-price vendors (γ = 2.0)")
+        ndu_wt = st.slider("Speed Weight (wₜ)",  0.10, 0.80, 0.35, 0.05,
+                           help="Exponential penalty on slow-delivery vendors (δ = 1.5)")
+        ndu_wr = st.slider("Rating Weight (wᵣ)", 0.10, 0.80, 0.25, 0.05,
+                           help="Logarithmic reward for highly-rated vendors")
+        # Always normalise weights so they sum to 1.0
+        _w_total = ndu_wp + ndu_wt + ndu_wr
+        ndu_wp /= _w_total
+        ndu_wt /= _w_total
+        ndu_wr /= _w_total
+        st.caption(f"Current (normalised): wₚ={ndu_wp:.2f}  wₜ={ndu_wt:.2f}  wᵣ={ndu_wr:.2f}  |  γ=2.0  δ=1.5")
 
 # --- RESOURCE LOADING ---
 @st.cache_resource
 def load_resources():
-    # 1. Locate Model
-    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
-    cloud_filename = "RTPD_v2.pt"
+
+    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v3_2.pt"
+    cloud_filename = "RTPD_v3_2.pt"
     
     model_path = None
     files = os.listdir(os.getcwd())
@@ -112,7 +197,6 @@ def load_resources():
         st.error(f"❌ Critical Error: Could not find '{cloud_filename}' in {os.getcwd()}")
         st.stop()
 
-    # 2. Load Model & DB
     model = YOLO(model_path)
     
     db = {}
@@ -123,10 +207,9 @@ def load_resources():
             
     return model, db
 
-# Initialize Resources
 model, PRODUCT_DB = load_resources()
 
-if not model:
+if model is None:
     st.error("⚠️ System Error: Model file not found.")
     st.stop()
 
@@ -138,7 +221,7 @@ with col_title:
     st.markdown("""
     <h1 style='margin-bottom: 0px;'>ShopVision Pro</h1>
     <p style='color: #888; margin-top: 0px; font-size: 18px;'>
-        AI-Powered Video Commerce Engine • v3.4
+        AI-Powered Video Commerce Engine • v4.0 — NDU Engine
     </p>
     """, unsafe_allow_html=True)
 
@@ -146,24 +229,21 @@ st.divider()
 
 uploaded_file = st.file_uploader("Upload Video Stream", type=["mp4", "mov", "avi"])
 
-# Initialize Session State
+# Initialize Session States
 if 'history' not in st.session_state:
     st.session_state.history = []
 if 'last_seen' not in st.session_state:
     st.session_state.last_seen = {}
 
 if uploaded_file:
-    # 1. Save Upload
-    tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") 
+    # Fix #1: Use suffix so OpenCV recognises the container format;
+    # close immediately so Windows allows VideoCapture to open it.
+    tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
     tfile.write(uploaded_file.read())
-    raw_video_path = tfile.name
+    tfile.close()
+    video_path = tfile.name
 
     col_video, col_live = st.columns([0.65, 0.35])
-
-    # 2. Run Sanitizer (The Cloud Fix)
-    with col_live:
-        with st.spinner("Optimizing video format..."):
-            video_path = sanitize_video(raw_video_path)
 
     with col_video:
         st.subheader("Input Stream")
@@ -183,10 +263,8 @@ if uploaded_file:
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         if fps == 0: fps = 30
         
-        with live_alert.container():
-             st.spinner("Processing video feed...")
-        
         frame_count = 0
+        detections_found = False 
         progress_bar = st.progress(0)
         
         while cap.isOpened():
@@ -200,101 +278,175 @@ if uploaded_file:
             if frame_count % frame_skip != 0: 
                 continue 
 
-            # --- PROCESS FRAME (Using Proven Logic) ---
-            # 1. Resize for speed
-            frame = cv2.resize(frame, (640, 480))
-
-            # 2. Predict (Using BGR, no RGB conversion needed for YOLOv8/11/12 usually)
+            # --- AI INFERENCE ---
+            # We pass the raw 'frame' (BGR).
             results = model.predict(frame, conf=conf_threshold, verbose=False)
             
             annotated_frame = frame.copy()
             
             if results[0].boxes:
+                detections_found = True
                 for box in results[0].boxes:
-                    x, y, w, h = box.xywh[0].cpu().numpy()
+                    # 1. Geometry Extraction
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+                    w = x2 - x1
+                    h = y2 - y1
                     aspect_ratio = h / w
-                    
-                    if aspect_ratio > 2.7:
-                        subtype = "Bottle"
-                        box_color = (0, 0, 255) 
-                    else:
-                        subtype = "Can"
-                        box_color = (0, 255, 0) 
-                        
-                    cv2.rectangle(annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), box_color, 3)
-                    
+
+                    # 2. Get Class Name First
                     cls_id = int(box.cls[0])
                     label = model.names[cls_id] 
-                    
-                    # Database Lookup
-                    lookup_key = f"{label}_{subtype}"
-                    matched_product = PRODUCT_DB.get(lookup_key)
-                    
-                    # Fuzzy Fallback
-                    if not matched_product:
-                         for db_key in PRODUCT_DB:
-                            if lookup_key.lower() == db_key.lower():
-                                matched_product = PRODUCT_DB[db_key]
-                                break
 
+                    # 3. Dynamic Subtype Logic (Geometric Logic)
+                    # ... inside the loop ...
+                    if label == "dove":
+                        # Dove Logic: Soap is wide/square, Shampoo is tall
+                        if aspect_ratio > 1.5:
+                            subtype = "Shampoo"   
+                            box_color = (203, 192, 255) 
+                        else:
+                            subtype = "Soap"      
+                            box_color = (255, 255, 255)
+                    
+                    elif label in ["pepsi", "cocacola", "coca-cola"]:
+                        # Soda Logic: Bottles are tall, Cans are short
+                        if aspect_ratio > 2.7:
+                            subtype = "Bottle"
+                            box_color = (255, 0, 0) # Blue (BGR)
+                        else:
+                            subtype = "Can"
+                            box_color = (0, 255, 0) # Green (BGR)
+                    
+                    else:
+                        # Fallback for anything else
+                        subtype = "Product"
+                        box_color = (0, 165, 255) # Orange
+
+                    # 4. Draw Box
+                    cv2.rectangle(annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), box_color, 3)
+                    
+                    # 5. Database Lookup
+                    # Fix #2: Normalise label so "coca-cola" and "cocacola" both
+                    # resolve to "coca_cola" matching the inventory.json keys.
+                    label_norm = label.replace("-", "_").replace(" ", "_")
+                    lookup_key = f"{label_norm}_{subtype}"
+
+                    # Case-insensitive match against DB keys
+                    matched_product = None
+                    for db_key in PRODUCT_DB:
+                        if lookup_key.lower() == db_key.lower():
+                            matched_product = PRODUCT_DB[db_key]
+                            break
+                    
                     if matched_product:
                         product_name = matched_product.get('name', f"Unknown {label}")
-                        price = matched_product.get('price', 'N/A')
-                        url = matched_product.get('url', '#')
-                        
+                        vendors      = matched_product.get('vendors', [])
+
                         current_time_sec = frame_count / fps
                         last_time = st.session_state.last_seen.get(product_name, -100)
-                        
-                        # Cooldown Logic
-                        if (current_time_sec - last_time) > cooldown:
-                            st.session_state.last_seen[product_name] = current_time_sec
-                            
-                            with live_alert.container():
-                                st.success(f"**Recommended:** {product_name}")
-                                st.metric("Best Price", price, f"Variant: {subtype}")
-                            
-                            st.toast(f"✅ Found {product_name}!", icon="🛒")
 
-                            entry_id = f"{frame_count}_{product_name}"
+                        if vendors and (current_time_sec - last_time) > cooldown:
+                            # ── NDU Ranking ───────────────────────────────
+                            ranked    = rank_vendors(vendors, wp=ndu_wp, wt=ndu_wt, wr=ndu_wr)
+                            winner    = ranked[0]
+                            runner_up = ranked[1] if len(ranked) > 1 else None
+
+                            price         = f"\u20b9{winner['price']:.0f}"
+                            utility_score = winner['utility_score']
+                            why_string    = winner.get('why', 'Best weighted balance')
+
+                            # 2nd-place alt block
+                            alt_html = ""
+                            if runner_up:
+                                alt_html = (
+                                    f'<div class="alt-vendor">'
+                                    f'\U0001f948 <strong>2nd:</strong> {runner_up["vendor_name"]} &nbsp;'
+                                    f'\u2014 \u20b9{runner_up["price"]:.0f} &nbsp;&bull;&nbsp; '
+                                    f'{runner_up["delivery_time"]} min &nbsp;&bull;&nbsp; '
+                                    f'U&thinsp;=&thinsp;{runner_up["utility_score"]:.4f}'
+                                    f'</div>'
+                                )
+
+                            st.session_state.last_seen[product_name] = current_time_sec
+
+                            # ── Smart Recommendation Card ─────────────────
+                            with live_alert.container():
+                                st.markdown(f"""
+<div class="ndu-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <span class="ndu-badge">\U0001f3c6 NDU Rank #1</span>
+    <span class="utility-score">{utility_score:.4f}</span>
+  </div>
+  <div style="font-size:12px;color:#888;margin-bottom:2px;">{product_name} &middot; {subtype}</div>
+  <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:3px;">{winner['vendor_name']}</div>
+  <div style="font-size:22px;font-weight:600;color:#00FF7F;margin-bottom:5px;">{price}</div>
+  <div style="font-size:12px;color:#999;margin-bottom:8px;">
+    \U0001f69a {winner['delivery_time']} min &nbsp;&bull;&nbsp; \u2b50 {winner['rating']}
+  </div>
+  <div class="why-pill">\U0001f4a1 {why_string}</div>
+  {alt_html}
+</div>
+                                """, unsafe_allow_html=True)
+
+                            st.toast(f"\u2705 Found {product_name}!", icon="\U0001f6d2")
+
                             st.session_state.history.append({
-                                "id": entry_id,
-                                "Time": f"{current_time_sec:.1f}s",
-                                "Product": product_name,
-                                "Price": price,
-                                "Vendor": "Partner Store", 
-                                "Link": url 
+                                "Time":        f"{current_time_sec:.1f}s",
+                                "Product":     product_name,
+                                "Vendor":      winner['vendor_name'],
+                                "Price":       price,
+                                "U_Score":     f"{utility_score:.4f}",
+                                "Why":         why_string,
+                                "Alt. Vendor": runner_up['vendor_name'] if runner_up else "—",
+                                "Alt. Price":  f"\u20b9{runner_up['price']:.0f}" if runner_up else "—",
+                                "Link":        winner.get('url', '#'),
                             })
 
-            # Display Frame (Convert to RGB for Streamlit)
-            video_window.image(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB), use_container_width=True)
+            # 6. DISPLAY (Convert to RGB for Human Eyes only)
+            # Fix: use_container_width deprecated post-2025 → width='stretch'
+            video_window.image(
+                cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB),
+                width="stretch"
+            )
 
         cap.release()
+        os.unlink(video_path)  # Fix #1: delete temp file after processing
         progress_bar.empty()
 
-        # Final Status
         with live_alert.container():
-            if len(st.session_state.history) > 0:
+            if detections_found:
                  st.success("✅ Analysis Complete.")
-                 st.info(f"Found {len(st.session_state.history)} items.")
+                 st.info("Scroll down to view shopping list.")
             else:
                  st.warning("⚠️ Analysis Complete: No products detected.")
-                 st.caption("Try lowering 'AI Sensitivity' or using a different video.")
+                 st.caption("Try lowering the AI Sensitivity slider or using a different video.")
 
-    # Show Results Table
     if st.session_state.history:
         st.divider()
-        st.subheader("🛒 Recommended Products")
+        st.subheader("🛒 NDU Smart Recommendations")
         df = pd.DataFrame(st.session_state.history)
-        
+
         if not df.empty:
+            # Keep only the most recent detection per product — re-detecting the
+            # same item adds no new information to the shopping list.
+            df = df.drop_duplicates(subset=["Product"], keep="last")
+
+            desired_cols = ["Time", "Product", "Vendor", "Price", "U_Score",
+                            "Why", "Alt. Vendor", "Alt. Price", "Link"]
+            cols_to_show = [c for c in desired_cols if c in df.columns]
             st.dataframe(
-                df[["Time", "Product", "Price", "Vendor", "Link"]],
+                df[cols_to_show],
                 column_config={
+                    "U_Score": st.column_config.TextColumn(
+                        "Utility Score", help="NDU objective score (higher = better)"
+                    ),
+                    "Why": st.column_config.TextColumn(
+                        "Why It Won", help="Primary factors driving the NDU ranking"
+                    ),
                     "Link": st.column_config.LinkColumn(
-                        "Action", display_text="Buy Now 🔗", validate="^https://.*"
+                        "Buy Now", display_text="Buy Now 🔗", validate="^https://.*"
                     ),
                 },
                 hide_index=True,
-                use_container_width=True
+                width="stretch",
             )

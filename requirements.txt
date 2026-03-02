@@ -1,5 +1,9 @@
+# --- app.py dependencies ---
 streamlit
 ultralytics
 opencv-python-headless
 pandas
-numpy
+
+# --- scraper.py dependencies ---
+requests
+beautifulsoup4
