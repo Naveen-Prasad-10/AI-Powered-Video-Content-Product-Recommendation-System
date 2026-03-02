@@ -12,7 +12,7 @@ By combining computer vision–based object detection with a backend data handle
 
 ## 📸 Interface Preview
 <img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 214649.png" />
-<img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src=docs/images/v4/Screenshot 2026-03-01 214817.png" />
+<img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v4/Screenshot 2026-03-01 214817.png" />
 
 ### ✨ Key Features (v3.0)
 
