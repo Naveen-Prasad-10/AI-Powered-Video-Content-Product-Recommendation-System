@@ -19,6 +19,7 @@ Moving beyond standard object detection, this system utilizes a decoupled "Eye-t
 
 ## 📸 Interface Preview
 <img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 214649.png" />
+<img width="1812" height="665" alt="Screenshot 2026-03-01 214817" src="docs/images/v4/Screenshot 2026-03-01 214817.png" />
 
 
 **U = [W_p × e^(-γ × P)] + [W_t × e^(-δ × T)] + [W_r × ln(1 + R)]**
