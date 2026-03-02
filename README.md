@@ -19,9 +19,7 @@ Moving beyond standard object detection, this system utilizes a decoupled "Eye-t
 
 ## 📸 Interface Preview
 <img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 214649.png" />
-<img width="1812" height="665" alt="Screenshot 2026-01-05 214649" src="docs/images/v3-Web App Dashboard/Screenshot 2026-01-05 215107.png" />
-### 2. 🧮 The "Brain": Non-Linear Dynamic Utility (NDU) Framework
-Instead of relying on rudimentary "Sort by Lowest Price" logic, this system introduces a custom mathematical optimizer to mimic human consumer behavior. For every detected item, the system calculates a Utility Score (U) for competing vendors (Amazon, Blinkit, Zepto, etc.) using exponential decay and logarithmic growth:
+
 
 **U = [W_p × e^(-γ × P)] + [W_t × e^(-δ × T)] + [W_r × ln(1 + R)]**
 
