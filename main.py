@@ -36,7 +36,7 @@ def main():
     product_db = load_inventory()
 
     # ⚠️ YOUR LOCAL PATH
-    model_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v2.pt"
+    model_path = r"C:\Users\Naveen Prasad\Documents\Project_data\best.pt"
     
     if not os.path.exists(model_path):
         print(f"❌ Error: Model file not found at: {model_path}")
