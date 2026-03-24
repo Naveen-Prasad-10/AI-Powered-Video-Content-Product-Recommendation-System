@@ -180,8 +180,8 @@ with st.sidebar:
 @st.cache_resource
 def load_resources():
 
-    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\RTPD_v3_2.pt"
-    cloud_filename = "RTPD_v3_2.pt"
+    local_windows_path = r"C:\Users\Naveen Prasad\Documents\Project_data\best.pt"
+    cloud_filename = "best.pt"
     
     model_path = None
     files = os.listdir(os.getcwd())
