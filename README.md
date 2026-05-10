@@ -4,7 +4,7 @@
 
 ShopVision Pro is an AI-powered Decision Support System that bridges the gap between visual media and actionable consumer intelligence. 
 
-Moving beyond standard object detection, this system utilizes a decoupled "Eye-to-Brain" architecture. It detects consumer products in real-time video feeds and passes them through a custom mathematical optimization algorithm to instantly calculate and recommend the optimal purchasing path across multiple e-commerce vendors.
+Moving beyond standard object detection, this system utilizes a decoupled architecture. It detects consumer products in real-time video feeds and passes them through a custom mathematical optimization algorithm to instantly calculate and recommend the optimal purchasing path across multiple e-commerce vendors.
 
 ---
 
